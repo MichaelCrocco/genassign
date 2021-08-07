@@ -7,6 +7,20 @@ Created on Thu Mar 26 22:45:47 2020
 
 import numpy as np
 
+def springRate(E,I,L):
+    K = (3*E*I)/L
+    return K
+
+def omega_n(K,m):
+    o_n = sqrt(K/m)
+    return o_n
+
+def omega_d(K,m,zeta):
+    o_d = omega_n(K,m)*sqrt(1-zeta^2)
+    return o_d
+
+def X_0(K,m,zeta):
+    return 200/(m*omega_d(K,m,zeta))
 
 def sysK(grid):
     ''' Returns the restricted global stiffness matrix for a pre-defined
