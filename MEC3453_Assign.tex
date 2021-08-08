@@ -37,17 +37,7 @@
 			ret = str(n(num,sig))
 		return ret
 
-	def springRate(E,I,L):
-	   	 return (3*E*I)/L
-	    	
-	def omega_n(K,m):
-	    	return sqrt(K/m)
-	    	
-	def omega_d(K,m,zeta):
-	    	return omega_n(K,m)*sqrt(1-zeta^2)
-	    	
-	def X_0(K,m,zeta):
-	    	return 200/(m*omega_d(K,m,zeta))
+
 
 \end{pycode}
 
@@ -69,9 +59,9 @@
 	\includecomment{hidden}		% Include text in the "hidden" environment
 \fi
 
-\title{CIV4280 Bridge Design \& Assessment\\Test for \VAR{FullName} (\VAR{StudentID})}
-\date{Semester 1, 2020}
-\author{Dr Colin Caprani\\Dr Mayer Melhem}
+\title{MEC3453 \ Assessment\\Test for \VAR{FullName} (\VAR{StudentID})}
+\date{Semester 2, 2021}
+\author{Dr Wing Chiu}
 
 \begin{document}
 \maketitle
@@ -90,110 +80,52 @@ If an abstract or instruction is desired, it should be included here.
 \section{Problem}
 
 \begin{pycode}
-	from testscript import *
+#	from testscript import *
 	import random
 	
-	L_list = [3.5,3.75,4.0,4.25,4.5,4.75,5.0]  # m
-	M_list = [-80, -30, -50]	# kNm
-	I = 37.5e-6 	# m4
-	J = 75e-6   	# m4
-	E = 200     	# GPa
-	G = 80      	# GPa
+	L_list = [2.5,2.75,3.0,3.25,3.5,3.75,4.0]  # m
+	M_list = [2000, 1750, 2250]	# kg
+	zeta_list = [0.015, 0.02, 0.025, 0.03]
+	I_list = [0.9, 0.95, 1, 1.05, 1.1] 	# m4
+	delta_t_list = [0.09, 0.095, 0.1, 0.105, 0.11] #s
+	E = 70     	# GPa
+	F = 2000   	#N
 	
 	# Unit conversions MNm2
 	E *= 1e3
 	G *= 1e3
 	
 	L = random.choice(L_list) 		# Member length
-	M = random.choice(M_list) 		# y-axis moment load @ C
+	m = random.choice(M_list) 		# y-axis moment load @ C
+	zeta = random.choice(zeta_list)
+	I = random.choice(I_list)
+	delta_t = random.choice(delta_t_list)	
+
+
+#	grid = [L,I,J,E,G,M]
 	
-	grid = [L,I,J,E,G,M]
+	K =(3*E*I)/L
+	omega_n = sqrt(K/m)
+	omega_d = omega_n*sqrt(1-zeta^2)
+	X_0 = (F*delta_1)/(m*omega_d)
 	
-	EI_L = E*I/L
-	GJ_L = G*J/L
-	
-	# Call analysis
-	D = solve_D(grid)
-	theta_C, theta_D, theta_F = D
-	Fcd = eleF(eleK(grid),d_CD(D)*1e3)
-	Fce = eleF(eleK(grid),d_CE(D)*1e3)
-	Fcf = eleF(eleK(grid),d_CF(D)*1e3)
-	Fgc = eleF(eleK(grid),d_GC(D)*1e3)
-	Fcg = eleF(eleK(grid),d_CG(D)*1e3)
-	
-	bmd_scale=8
-	tmd_scale=5
+
 \end{pycode}
 
 Consider a simple model of an airplane wing given in Fig 1. The wing is approximated as vibrating back and forth in its plan, massless compared to the missle carriage system (of mass, \emph{m}). The modulus and the moment of inertia are approximated by \emph{E} and \emph{I}, respectively, and \emph{l} is the length of the wing. The wing is modelled as a simple cantilever for the purpose of estimating the vibration resulting from the release of the missle, which is approximately the impulse function $\mathit{F\delta(t)}$.\hfill \break \break
 Calculate the response and plot your results for the case of an aluminum wing with the following details.
 
 \begin{itemize} %these should be appropritately randomized 
-	\item $l = \py{int(l)}$ m
+	\item $l = \py{int(L)}$ m
 	\item $I = \pys{!{to_eng(I*1e12)}}$ mm$^4$
 	\item $\zeta = \py{float(zeta)}$
 	\item $E = \py{int(E/1e3)}$ GPa
 	\item $m = \pys{!{to_eng(m*1e3)}}$ kg
 \end{itemize}
 
-Model \emph{F} as 2000N lasting for 0.1 s.
+\emph{F} $=\py{int(F)}kg$ lasting for $\py{delta_t} s$
 
-%\begin{figure}[ht]
-%	\centering
-%
-%	\begin{pysub}
-%	\setcoords{-25}{30}[1][1] 
-%	\setaxis{2} 
-%	\begin{adjustbox}{max width=\textwidth}
-%	\begin{tikzpicture}[coords] 
-%	
-%	\dpoint{c}{0}{0}{0}; 
-%	\dpoint{d}{ -!{L} }{0}{0};
-%	\dpoint{e}{0}{ !{L} }{0}; 
-%	\dpoint{f}{ !{L} }{0}{0};
-%	\dpoint{g}{0}{-!{L} }{0}; 
-%	\dpoint{z}{ -!{L} }{ -!{0.9*L} }{0}; 
-%	
-%	\daxis{1}{z}; 
-%	
-%	\foreach \startn/\endn in {c/d,c/e,c/f,c/g}
-%		\dbeam{1}{\startn}{\endn};
-%	
-%	\support{1}{d}; \hinge{1}{d}
-%	\support{3}{e}[90];
-%	\support{1}{f}; \hinge{1}{f}
-%	\support{3}{g}[270];
-%	
-%	\begin{scope}[force/.append style={color=red,>={Latex[length=0pt 5]}},
-%				  normalLine/.append style={line width=1mm}]
-%		%Fiendishly clever hack to convert float to pt for testing, hence to integer
-%		\ifthenelse{\lengthtest{ !{abs(M)} pt > 0pt}}
-%		{
-%			\dload{4}{c}[90][-90][ !{L/3} ];
-%			\dnotation{1}{c}{$!{n(-M)}$~kNm}[left=5mm];
-%		}{}
-%	\end{scope}
-%	
-%	\foreach \startn/\endn in {c/d,c/f}
-%		\ddimensioning{xy}{\startn}{\endn}{-!{1.3*L}}[$!{L}$~m];
-%	\foreach \startn/\endn in {c/e,c/g}
-%		\ddimensioning{yx}{\startn}{\endn}{!{1.4*L}}[$!{L}$~m];
-%	
-%	\dnotation{1}{c}{$C$}[below=2mm];
-%	\dnotation{1}{d}{$D$}[above right];
-%	\dnotation{1}{e}{$E$}[above left];
-%	\dnotation{1}{f}{$F$}[above right];
-%	\dnotation{1}{g}{$G$}[below right];
-%	
-%	\end{tikzpicture}
-%	\end{adjustbox}
-%	\end{pysub}
-%	\caption{Grid Problem.}
-%	\label{fig:grid}
-%\end{figure}
-
-
-\begin{hidden}	
+%\begin{hidden}	
 \clearpage
 \section{Solution}
 
@@ -215,22 +147,22 @@ Model \emph{F} as 2000N lasting for 0.1 s.
 
 ...but
 \begin{equation}
-\begin{split}
-	Impulse & = F\delta(t)\\
-		& = 2000(0.1)\\
-		& =200 N\cdot s
-\end{split}
+%\begin{split}
+	Impulse  = F\delta(t)\\
+		 = 2000(0.1)\\
+		 =200 N\cdot s
+%\end{split}
 \end{equation}
 
 \begin{equation}
 \begin{split}
 
-	K &\left & = \!\frac{3EI}{l^3}\right
+	K \left  &= \!\frac{3EI}{l^3}\right
 
-	& = \left\frac{3\py{to_eng(E)}\py{to_eng(I)}}
+	 &= \left\frac{3\py{to_eng(E)}\py{to_eng(I)}}
 				{\py{to_eng(l)}}\times 10^{-3}\right
                 
-	& = \py{springRate(E,I,l)}
+	 &= \py{K}
 
 \end{split}
 \end{equation}
@@ -238,11 +170,11 @@ Model \emph{F} as 2000N lasting for 0.1 s.
 \begin{equation}
 \begin{split}
 
-	\omega_n &\left & = \sqrt{\frac{K}{m}}\right
+	\omega_n \left  &= \sqrt{\frac{K}{m}}\right
 
-	& = \left\frac{\py{to_eng(K)}}{\py{to_eng(I)}}\right
+	 &= \left\frac{\py{to_eng(K)}}{\py{to_eng(m)}}\right
                 
-	& = \py{omega_n(K,m)}
+	 &= \py{omega_n} s^{-1}
 
 \end{split}
 \end{equation}
@@ -250,11 +182,11 @@ Model \emph{F} as 2000N lasting for 0.1 s.
 \begin{equation}
 \begin{split}
 
-	\omega_d &\left & = \omega_n\sqrt{1-\zeta^2}\right
+	\omega_d \left &= \omega_n\sqrt{1-\zeta^2}\right
 
-	& = \py{omega_n(K,m)}\sqrt{1-\py{\zeta}^2}
+	 &= \py{omega_n}\sqrt{1-\py{zeta}^2}
                 
-	& = \py{omega_d(K,m,zeta)} s^{-1}
+	 &= \py{omega_d} s^{-1}
 
 \end{split}
 \end{equation}
@@ -262,11 +194,11 @@ Model \emph{F} as 2000N lasting for 0.1 s.
 \begin{equation}
 \begin{split}
 
-	X_0 & = \frac{Impulse}{m\cdot\omega_d}
+	X_0  &= \frac{Impulse}{m\cdot\omega_d}
 	
-	& = \frac{200}{\py{m}\cdot\py{omega_d(omega_n,zeta)}}
+	 &= \frac{200}{\py{m}\cdot\py{omega_d(omega_n,zeta)}}
                 
-	& = \py{X_0(K,m,zeta)}
+	 &= \py{X_0)}
 
 \end{split}
 \end{equation}
@@ -274,18 +206,18 @@ Model \emph{F} as 2000N lasting for 0.1 s.
 Response:
 
 \begin{equation}
-%\begin{split}
+\begin{split}
 
-	x(t) = X_0\exp^{\zeta\omega_nt}sin(\omega_dt + \phi)
+	x(t)  &= X_0\exp^{\zeta\omega_nt}sin(\omega_dt + \phi)
 	
-	& = \py{X_0(K,m,zeta)}\exp^{\py{zeta}\py{omega_n(K,m)}}sin( \py{omega_d(K,m,zeta)}t )
+	 &= \py{X_0}\exp^{\py{zeta}\py{omega_n}}sin( \py{omega_d}t )
 
-%\end{split}
+\end{split}
 \end{equation}
 
 %plot the response
 
 
 
-\end{hidden}
+%\end{hidden}
 \end{document}
